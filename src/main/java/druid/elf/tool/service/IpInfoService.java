@@ -14,9 +14,12 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
+
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -151,7 +154,7 @@ public class IpInfoService {
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Yaml outputYaml = new Yaml(options);
 
-        try (FileWriter writer = new FileWriter(newClashFileName)) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(newClashFileName, StandardCharsets.UTF_8))) {
             outputYaml.dump(clashConfig, writer);
         }
 
