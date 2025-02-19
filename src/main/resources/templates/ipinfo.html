@@ -25,6 +25,9 @@
             background-color: #6c757d;
             color: white;
         }
+        .btn-info{
+            margin-left: 20px
+        }
         .form-control {
             border-radius: 5px;
         }
@@ -34,24 +37,34 @@
         .pagination .page-item.disabled .page-link {
             color: #ccc;
         }
+        td,th{
+            text-align: center;
+            line-height: 40px;
+        }
+
     </style>
 </head>
 <body>
 
 <div id="app" class="container mt-4">
     <h2>IP 信息维护</h2>
-
+    <div>
     <!-- 新增 IP 信息按钮 -->
     <button @click="openModal" class="btn btn-custom mb-3">新增 IP</button>
 
     <!-- 批量导入数据按钮 -->
     <button @click="openBatchImportModal" class="btn btn-info mb-3">批量导入 IP</button>
 
+    <!-- 批量删除数据按钮 -->
+    <button @click="delDataHandler" class="btn btn-info mb-3">批量删除 IP</button>
+
     <!-- 下载融合配置文件按钮 -->
     <button v-if="showDownloadButton" @click="downloadMergedConfig" class="btn btn-primary mb-3 float-end me-2">下载融合配置文件</button>
 
     <!-- 生成 Clash 配置文件按钮 -->
     <button @click="openClashModal" class="btn btn-success mb-3 float-end">生成 Clash 配置</button>
+
+    </div>
 
     <!-- 新增/编辑 IP 信息表单（弹出式模态框） -->
     <div class="modal fade" id="ipModal" tabindex="-1" aria-hidden="true" v-if="isIpModalVisible"
@@ -154,6 +167,7 @@
     <table class="table mt-4">
         <thead>
         <tr>
+            <th><input type="checkbox" v-model="allChecked" @change="allCheckChange"/> 全选</th>
             <th>IP 地址</th>
             <th>端口</th>
             <th>用户名</th>
@@ -165,6 +179,9 @@
         </thead>
         <tbody>
         <tr v-for="ip in ipInfos.content" :key="ip.id">
+            <td>
+                <input type="checkbox" :value="ip.id" v-model="checkBoxValues" @change="judgeAllCheck"/>
+            </td>
             <td>{{ ip.ipAddress }}</td>
             <td>{{ ip.port }}</td>
             <td>{{ ip.username }}</td>
@@ -205,7 +222,8 @@
             const batchData = ref("");  // 批量导入的原始数据
             const pageParam = ref({ isPaging: true, pageNum: 1, pageSize: 8 });
             const isEditing = ref(false);
-
+            const checkBoxValues = ref([]);
+            const allChecked = ref(false);
             // 控制模态框显示
             const isIpModalVisible = ref(false);
             const isBatchImportModalVisible = ref(false);
@@ -241,6 +259,8 @@
             const loadData = () => {
                 axios.post("/ipinfo/list", pageParam.value).then(res => {
                     ipInfos.value = res.data;
+                    // 判断数据获取时，是否选中
+                    judgeAllCheck()
                 });
             };
 
@@ -316,6 +336,8 @@
                 });
             };
 
+
+
             // 批量保存
             const batchSave = () => {
                 const ipList = batchData.value
@@ -349,6 +371,37 @@
                 }
             };
 
+            //全选监听
+
+            const allCheckChange = (e)=> {
+                const ipIdList = ipInfos.value.content.map(item=>item.id)
+                if(e.target._modelValue){
+                    checkBoxValues.value = Array.from(new Set(checkBoxValues.value.concat(ipIdList)))
+                }else{
+                    checkBoxValues.value = checkBoxValues.value.filter(item => !ipIdList.includes(item)) || [];
+                }
+            }
+
+            // 监听当前选中，判断当前数据是否全选
+            const judgeAllCheck = ()=>{
+                if(!ipInfos.value.content.length){
+                    allChecked.value = false
+                }else{
+                    allChecked.value = ipInfos.value.content.every(item=> checkBoxValues.value.includes(item.id))
+                }
+
+            }
+            // 批量删除
+            const delDataHandler = ()=>{
+                if (confirm('确定删除这些 IP 信息吗？')) {
+                    axios.post(`/ipinfo/deleteBatch`,checkBoxValues.value).then(() => {
+                        pageParam.value.pageNum = 1;
+                        loadData();
+                        alert("批量删除成功！");
+                    });
+                }
+            }
+
             // 编辑 IP
             const editIp = (ip) => {
                 fetchIpById(ip.id);
@@ -372,7 +425,8 @@
                 clashForm, showDownloadButton, openModal, openBatchImportModal, openClashModal,
                 closeIpModal, closeBatchImportModal, closeClashModal,
                 handleFileUpload, generateConfig, saveIp, batchSave, deleteIp, editIp, changePage,
-                downloadMergedConfig
+                downloadMergedConfig,
+                checkBoxValues,allChecked,delDataHandler,allCheckChange,judgeAllCheck
             };
         }
     }).mount("#app");
