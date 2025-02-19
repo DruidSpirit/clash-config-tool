@@ -32,7 +32,17 @@ public class IpInfoService {
 
     // 分页查询
     public Page<IpInfo> findAll(PageParam pageParam) {
-        PageRequest pageRequest = PageRequest.of(pageParam.getPageNum() - 1, pageParam.getPageSize(), Sort.by(Sort.Order.asc("sortOrder"), Sort.Order.desc("addTime")));
+        // 创建一个排序规则，首先按 sortOrder 升序排序，再按 addTime 降序排序，如果这两个字段相等，再按 id 升序排序
+        Sort sort = Sort.by(
+                Sort.Order.asc("sortOrder"),  // 按 sortOrder 升序
+                Sort.Order.desc("addTime"),   // 按 addTime 降序
+                Sort.Order.asc("id")         // 按 id 升序，确保排序的唯一性
+        );
+
+        // 创建分页请求
+        PageRequest pageRequest = PageRequest.of(pageParam.getPageNum() - 1, pageParam.getPageSize(), sort);
+
+        // 调用 JPA Repository 的 findAll 方法，传入分页请求
         return ipInfoRepository.findAll(pageRequest);
     }
 
