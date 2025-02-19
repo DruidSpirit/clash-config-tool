@@ -62,6 +62,14 @@ public class IpInfoController {
         return ipInfoService.batchSave(ipInfos);
     }
 
+    // 批量删除 IP 信息
+    @PostMapping("/deleteBatch")
+    @ResponseBody
+    public void deleteBatch(@RequestBody List<String> ids) {
+        ipInfoService.deleteBatch(ids);
+    }
+
+
     // 查询 IP 信息
     @GetMapping("/query/{id}")
     @ResponseBody

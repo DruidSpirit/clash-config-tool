@@ -46,6 +46,12 @@ public class IpInfoService {
         return ipInfoRepository.save(ipInfo);
     }
 
+    // 批量删除 IP 信息
+    @Transactional
+    public void deleteBatch(List<String> ids) {
+        ipInfoRepository.deleteAllById(ids);  // 使用 JPA 提供的批量删除方法
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public List<IpInfo> batchSave(List<IpInfo> ipInfos) {
         // 获取所有ipInfos中的ip地址
